@@ -1,0 +1,11 @@
+"use client";
+import {useEffect,useState} from "react";import AppShell from "@/components/AppShell";import RequireAuth from "@/components/RequireAuth";import {createClient} from "@/lib/supabase-browser";
+export default function FinancePage(){
+ const [rows,setRows]=useState<any[]>([]),[title,setTitle]=useState(""),[payee,setPayee]=useState(""),[amount,setAmount]=useState(""),[due,setDue]=useState("");
+ async function load(){const r=await createClient().from("finance_items").select("*").order("due_date");setRows(r.data||[])} useEffect(()=>{load()},[]);
+ async function add(e:React.FormEvent){e.preventDefault();await createClient().from("finance_items").insert({title,payee,amount:amount?Number(amount):null,due_date:due||null,item_type:"Payment Due",status:"Open"});setTitle("");setPayee("");setAmount("");setDue("");load()}
+ return <RequireAuth><AppShell><div className="eyebrow">Finance</div><h1>Invoices and payments.</h1><p className="lead">Operational tracking for amounts due, invoices, receivables, payroll, closing costs, and scheduled payments. Atlas remains the accounting system of record.</p>
+ <section className="section"><form className="card form" onSubmit={add}><div className="grid"><div className="field"><label>Item</label><input value={title} onChange={e=>setTitle(e.target.value)} required/></div><div className="field"><label>Payee</label><input value={payee} onChange={e=>setPayee(e.target.value)}/></div><div className="field"><label>Amount</label><input type="number" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/></div><div className="field"><label>Due date</label><input type="date" value={due} onChange={e=>setDue(e.target.value)}/></div></div><button className="button primary">Add finance item</button></form></section>
+ <section className="section"><div className="card"><table className="table"><thead><tr><th>Item</th><th>Payee</th><th>Amount</th><th>Due</th><th>Status</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}><td>{r.title}</td><td>{r.payee||"—"}</td><td>{r.amount?new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(r.amount):"—"}</td><td>{r.due_date||"—"}</td><td><span className="badge">{r.status}</span></td></tr>)}</tbody></table></div></section>
+ </AppShell></RequireAuth>
+}
